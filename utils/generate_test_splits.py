@@ -13,7 +13,10 @@ def generate_hold_out_split (dataset, training = 0.8, base_dir="splits"):
 
     training_ids = article_ids[:int(training * len(article_ids))]
     hold_out_ids = article_ids[int(training * len(article_ids)):]
-
+    
+    print("Noticias utilizadas para el train: ", len(training_ids))
+    print("Noticias utilizadas para el test: ", len(hold_out_ids))
+    
     dataset_path = "/home/Operador/tensor_project/data/fnc-1-original/finalDatasets/total_data_aggregated.csv"
     outputTrainPath = "train_partition.csv"
     outputTestPath = "test_partition.csv"
@@ -29,7 +32,8 @@ def generate_hold_out_split (dataset, training = 0.8, base_dir="splits"):
         # Escribimos los headers de los dos datasets
         testWriter.writeheader()
         trainWriter.writeheader()
-
+        validationWriter.writeheader()
+        
         # Vamos recorriendo el fichero de datos agregados y encaminamos las muestras al dataset correspondiente
         for line in csv.reader(data, delimiter=','):
             
@@ -37,13 +41,16 @@ def generate_hold_out_split (dataset, training = 0.8, base_dir="splits"):
             "ArticleBody": line[1],
             "Stance": line[2],
             "BodyIDS": line[3]}
-
-            if line[3] in training_ids:
+            
+            bodyIds = int(line[3]) if not line[3] == "BodyIDS" else -1
+            if bodyIds in training_ids:
                 trainWriter.writerow(row)
-            elif line[3] in hold_out_ids:
-                testWriter.writerow(row)
+            elif bodyIds in hold_out_ids:
+                validationWriter.writerow(row)
             else: 
+                testWriter.writerow(row)
                 print(">> Se ha encontrado un id fuera de la lista")
+                print(">>> line[3] ", line[3] )
     
     # write the split body ids out to files for future use
     # with open(base_dir+ "/"+ "training_ids.txt", "w+") as f:
