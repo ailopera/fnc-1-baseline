@@ -1,7 +1,7 @@
 import random
 import os
 from collections import defaultdict
-
+import csv
 
 def generate_hold_out_split (dataset, training = 0.8, base_dir="splits"):
     r = random.Random()
@@ -14,12 +14,43 @@ def generate_hold_out_split (dataset, training = 0.8, base_dir="splits"):
     training_ids = article_ids[:int(training * len(article_ids))]
     hold_out_ids = article_ids[int(training * len(article_ids)):]
 
-    # write the split body ids out to files for future use
-    with open(base_dir+ "/"+ "training_ids.txt", "w+") as f:
-        f.write("\n".join([str(id) for id in training_ids]))
+    dataset_path = "/home/Operador/tensor_project/data/fnc-1-original/finalDatasets/total_data_aggregated.csv"
+    outputTrainPath = "train_partition.csv"
+    outputTestPath = "test_partition.csv"
 
-    with open(base_dir+ "/"+ "hold_out_ids.txt", "w+") as f:
-        f.write("\n".join([str(id) for id in hold_out_ids]))
+    with open(dataset_path, 'r') as data, open(outputTrainPath, 'w') as trainFile, open(outputTestPath, 'w') as testFile:
+        print(">> Fichero de train generado:", outputTrainPath)
+        print(">> Fichero de test generado:", outputTestPath)
+        
+        fieldnames = ["Headline","ArticleBody","Stance","BodyIDS"]
+        trainWriter = csv.DictWriter(trainFile, fieldnames=fieldnames)
+        testWriter = csv.DictWriter(testFile, fieldnames=fieldnames)
+        
+        # Escribimos los headers de los dos datasets
+        testWriter.writeheader()
+        trainWriter.writeheader()
+
+        # Vamos recorriendo el fichero de datos agregados y encaminamos las muestras al dataset correspondiente
+        for line in csv.reader(data, delimiter=','):
+            
+            row = { "Headline": line[0],
+            "ArticleBody": line[1],
+            "Stance": line[2],
+            "BodyIDS": line[3]}
+
+            if line[3] in training_ids:
+                trainWriter.writerow(row)
+            elif line[3] in hold_out_ids:
+                testWriter.writerow(row)
+            else: 
+                print(">> Se ha encontrado un id fuera de la lista")
+    
+    # write the split body ids out to files for future use
+    # with open(base_dir+ "/"+ "training_ids.txt", "w+") as f:
+    #     f.write("\n".join([str(id) for id in training_ids]))
+
+    # with open(base_dir+ "/"+ "hold_out_ids.txt", "w+") as f:
+    #     f.write("\n".join([str(id) for id in hold_out_ids]))
 
 
 
